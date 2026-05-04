@@ -1,0 +1,14 @@
+appVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  type: loadBalancer
+  selector: 
+    app: flask-app
+  ports:
+  - port: 80
+    targetPort: 5000
+  
+  
+  
