@@ -1,0 +1,53 @@
+trigger:
+- main
+
+variables:
+  imageName: 'flask-app'
+  acrName: 'devopsacr12345'
+  acrLoginServer: 'devopsacr12345.azurecr.io'
+  aksCluster: 'devops-aks'
+  resourceGroup: 'devops-rg'
+
+stages:
+
+# ---------------- BUILD STAGE ----------------
+- stage: Build
+  displayName: Build and Push Image
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - task: Docker@2
+      displayName: Build and Push Docker Image
+      inputs:
+        containerRegistry: 'acr-service-connection'   # create in Azure DevOps
+        repository: $(imageName)
+        command: buildAndPush
+        Dockerfile: docker/Dockerfile
+        tags: |
+          latest
+
+# ---------------- DEPLOY STAGE ----------------
+- stage: Deploy
+  displayName: Deploy to AKS
+  dependsOn: Build
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - task: Kubernetes@1
+      displayName: Deploy to Kubernetes
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'azure-service-connection'   # create in Azure DevOps
+        azureResourceGroup: $(resourceGroup)
+        kubernetesCluster: $(aksCluster)
+        command: apply
+        useConfigurationFile: true
+        configuration: |
+          k8s/deployment.yaml
+          k8s/service.yaml
