@@ -1,4 +1,4 @@
 azurerm "azurerm_resouce_group" "rg" {
-  name = "flask-rg"
-  location = "East-US"
+  name = var.resource_group_name
+  location = var.location
 }
